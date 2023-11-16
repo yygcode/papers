@@ -1,0 +1,116 @@
+#+TITLE: Codec Erasure Code Paper Introduction
+
+本文介绍 Erasure Code 基本原理和相关论文, 作为学习引导.
+
+* 数学原理
+本节简要介绍方程组, 矩阵运算和伽罗瓦域. 熟悉相关背景的可以直接跳过.
+
+** Parity=1(RAID5)
+考虑多元一次方程:
+#+begin_quote
+d1 * x1 + d2 * x2 + d3 * x3 + ... + dn * xn = b1;
+#+end_quote
+
+对于任意 i, 1 <= i <= n, 可以把上述方程表示为:
+#+begin_quote
+x_i = [b1 - (d1 * x1 + ... + d_{i-1} * x_{i-1} + d_{i+1} * x_{i+1} + dn * xn)] / d_i;
+#+end_quote
+
+假设 x_i 是丢失的数据, 则 x_i 通过上述方程总是可以求解得到. 有计算机数值表示背景的
+人很容易看出另一个问题: 对于 w 比特宽度的数据, 上述方程的中间结果可能会溢出, 通过
+扩展伽罗瓦域 GF(2^8) 多项式运算, 可以保证所有的运算结果都在 w 比特表达范围内. 我们
+用 + 表示异或, 令 d1 = d2 = ... = dn = 1, b0 = 0, 可以得到:
+#+begin_quote
+x1 + x2 + ... + xn = 0
+#+end_quote
+
+令 k = n-1, x1, ..., x_k 表示数据, xn 为校验数据 Parity, 可以等价替换为:
+#+begin_quote
+x1 + x2 + ... + x_k + p = 0
+#+end_quote
+
+这实际就是 RAID5 的实现, 注意 + 表示 xor.
+
+** Parity=m
+本节需要线性代数背景.
+
+考虑两个方程组成的多元一次方程组:
+#+begin_quote
+d11 * x1 + d12 * x2 + ... + d_{1n} * x_n = b1
+d21 * x2 + d22 * x2 + ... + d_{2n} * x_n = b2
+#+end_quote
+
+上述方程任意两个变量x_i, x_j 有唯一解的前提是两个方程是线性无关的.
+把系数提取出来作为矩阵:
+#+begin_src text
+  d11 d12 ... d_1n
+  d21 d22 ... d_2n
+#+end_src
+
+如果上述方程组是线性无关的, 则上述矩阵可以表达为严格三角形, 矩阵的秩(RANK)为2.
+上述方程组结合扩展伽罗瓦域 GF(2^8), 即为 RAID6 的一种实现. 我们把上述矩阵和单位
+矩阵组合到一起, 称为生成矩阵:
+#+begin_src text
+  1   0   ... 0
+  0   1   ... 0
+  ...
+  0   0   ... 1
+  d11 d12 ... d_1n
+  d21 d22 ... d_2n
+#+end_src
+
+把上述方程组扩展为 m 个方程:
+#+begin_src text
+  1   0   ... 0
+  0   1   ... 0
+  ...
+  0   0   ... 1
+  d11 d12 ... d_1n
+  d21 d22 ... d_2n
+  dm1 dm2 ... d_mn
+#+end_src
+
+确保去掉任意 m 行后, 上述矩阵都满秩, 则通过该生成矩阵编码, 可以容忍任意 m 个数据
+丢失后可恢复.
+
+* Papers
+** Basic
+1. codec-ec-tutorial-on-erasure-coding-for-storage-applications-part1.pdf
+Jerasure 作者, Erasure Code 领域知名教授 Jim Plank 2013 年在 FAST 上的分享. 参见
+这里: https://web.eecs.utk.edu/~jplank/plank/papers/FAST-2013-Tutorial.html . 良好的
+入门资料.
+
+** LRC
+- Erasure Coding in Windows Azure Storage :: codec-ec-lrc-azure-atc12-final181_0.pdf
+Azure(微软) 云存储的 EC 实现. 特征如下:
+#+begin_src text
+  | D0   D1   D2 |  D3   D4   D5 | P0   P1 |
+  |----- L0 -----|------ L1 -----|
+#+end_src
+
+L0/L1 与 P0/P1 进行了特殊的矩阵设计, 能保证线性无关, 因此任意3个数据损坏, 均能恢复.
+P0/P1 损坏, 需要读所有数据块, 成本较高.
+
+- Practical Design Considerations for Wide Locally Recoverable Codes :: codec-ec-lrc-google-fast23-kadekodi.pdf
+Google LRC 实现.
+
+- XORing Elephants: Novel Erasure Codes for Big Data :: codec-ec-xoring-elephants-novel-erasure-codes-for-big-data.pdf
+Facebook LRC 实现. 特征如下:
+#+begin_src text
+  | D0   D1   D2 |  D3   D4   D5 | P0   P1     |
+  |----- L0 -----|------ L1 -----|  Virtual P3 |
+#+end_src
+
+满足 x1 * L0 + x2 * L1 = P3 = y0 * P0 + y1 * P1. 因此即使全局校验块丢失, 也能低成本恢复.
+Virtual P3 实现没有保存, 而是通过 d11 * P0 + d12 * P1 计算得到.
+
+- Partial MDS (PMDS) and Sector-Disk (SD) Codes that Tolerate the Erasure of Two Random Sectors ::
+  codec-ec-partial-mds-and-sector-disks-blaum2014.pdf
+理论性比较强的一篇论文, 但其中提及的 Parity Check Matrix (H Matrix) 对实现 LRC 具有
+很好的参考意义.
+
+** Performance
+
+* References
+- Jim Plank :: https://web.eecs.utk.edu/~jplank/plank/papers/
+  Jerasure 库作者
