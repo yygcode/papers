@@ -1,0 +1,12 @@
+LOCK-FREE:
+- Concurrent Data Structures, CDS;
+-Concurrent Search Data Structures, CSDS;
+
+Common: Linked-List, Skip-List, hash table, tree.
+
+Problems:
+1. insert and delete conflicts;
+2. multiple delete conflicts;
+3. memory reclaim but used by other threads;
+4. ABA problem;
+5. Linearization;
