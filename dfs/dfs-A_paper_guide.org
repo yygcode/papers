@@ -1,0 +1,58 @@
+#+TITLE: DFS Paper Guide
+
+* Introduction
+本文是分布式文件系统(Distributed File System)论文阅读指引.
+
+* Meta Management
+1. [[file:dfs-google-gfs-sosp2003.pdf][Google GFS]] : Google 2003, 与 MapReduce, BigTable 并称大数据处理三驾马车；
+2. [[file:dfs-alibaba-pangu.txt][Alibaba Pangu]] : 一篇网络介绍, 并没有 Pangu 整体介绍, 但有大量子主题论文；
+3. [[file:dfs-hadoop-hdfs.pdf][Hadoop HDFS]] : Hadoop 社区分布式存储, Java 实现；
+4. [[file:dfs-alibaba-polarfs.pdf][Alibaba PolarFs]] : 一款用于 PolarDB(云上MySQL)的存储；
+
+* Data Placement
+Data Placement(数据放置) 决定分布式文件系统的数据放置位置.
+
+分布式文件系统从顶层设计看, 数据放置分为两类: 基于中心控制(Master-Based) 和基于
+分布式哈希(Distributed Hash)的.
+
+Hadoop HDFS, Google GFS, Azure(Microsoft) WAS, Aliyun Pangu, ByteDance ByteStore
+都是基于中心控制的实现.
+
+CEPH 是基于一致性 Hash 的实现. 具体算法是 CRUSH, 参见论文 [[file:dfs-placement-ceph-crush-sc06.pdf][CEPH CRUSH PAPER]].
+
+Data Placement 需要考虑物理位置, 空间均衡, 流量均衡, 介质异构, 介质分池, 机器
+变更, 临时加黑, 前台/后台差异, 不同场景(过载/轻负载), 以及算法效率, 可配性,
+可维护性, 可演进性等.
+
+** 设计原则
+Hide For Secure.
+
+** 论文
+
+** 实现
+*** Storage Policy
+PhysicalTopo, MediumType, StoragePool, LocalFirst, MultiZone, OpsFirst,
+CapacityFirst, StorageTier
+
+*** Dynamic Option
+BlackList, MaxReplicaPerServer(For Wide EC), MaxReplicaPerMedium,
+
+*** Capacity Class
+Free, Using, Recycle, Ratio, Variance, Mean.
+
+*** Resource
+Capacity, Network Bandwidth, Medium Ops.
+
+*** Simulator
+
+* Erasure Code
+分布式存储系统中, 磁盘可能损坏, 节点可能突然离线. 为确保硬件偶发故障时, 系统
+可用性不受影响, 需要冗余保存数据. 主要技术包括多副本和 EC(Erasure Code, 纠删码).
+定义副本数(Replication Factor)等于一份用户数据最终写入介质的数据. 例如, 三副本
+副本数为 3, 10 + 2 EC 副本数为 1.2, 两者都能容忍两个磁盘同时故障时, 数据不丢.
+
+Erasure Code 主要涉及 RAID(RAID5/6), CRS(Cauchy Reed-Solomon), LRC(Local
+Reconstruction Code), AZC(Availability Zone Code) 等技术. 一般基于 ISA-L 增强
+开发进入产品.
+
+Erasure Code 相关的论文在专题 codec 下: [[file:../codec][Codec Papers.]]
