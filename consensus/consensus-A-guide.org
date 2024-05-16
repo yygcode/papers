@@ -1,0 +1,17 @@
+#+TITLE: Consensus Paper Guide
+
+* Theory
+
+* Produce
+1. [[file:consensus-google-chubby-osdi06.pdf][Google Chubby]] : 06 年发表的论文, 先取者；
+2.
+
+* 工程经验
+分布式协调锁用于解决分布式服务发现, 订阅通知, 配置共享, 加锁, 选主, 以及
+少量元数据的存储.
+
+1. 基于共识算法的分布式协调锁服务, 提供粗粒度的锁；
+2. 业务需要自行保证抢锁的频率, 以及等待租约超期；
+3. Master 用于发布 Leader；
+4. 提供 PosixFs 结构, 支持多卷；
+5. 通过订阅方式减少请求数；

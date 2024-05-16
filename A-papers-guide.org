@@ -1,0 +1,8 @@
+#+TITLE: Papers Guide
+
+|------+--------------------------|
+| Abbr | Description              |
+|------+--------------------------|
+| dfs  | Distributed File System  |
+| dls  | Distributed Lock Service |
+|------+--------------------------|
