@@ -1,0 +1,15 @@
+#+TITLE: Introduction
+
+* Major Operations
+** Inode operation
+| OpName   | OpCode | Input | Output | Description |
+|----------+--------+-------+--------+-------------|
+| GetAttr  |      1 |       |        |             |
+| SetAttr  |      2 |       |        |             |
+| Access   |      4 |       |        |             |
+| ReadLink |      5 |       |        |             |
+| Read     |      6 |       |        |             |
+| Write    |      7 |       |        |             |
+
+* References
+- rfc
